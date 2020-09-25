@@ -26,7 +26,12 @@
   "keywords": [
     "homebridge-plugin"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^0.20.0",
+    "fast-xml-parser": "^3.17.4",
+    "js2xmlparser": "^4.0.1",
+    "xml2js": "^0.4.23"
+  },
   "devDependencies": {
     "@types/node": "^14.10.3",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
