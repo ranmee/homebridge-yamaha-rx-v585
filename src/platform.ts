@@ -1,36 +1,41 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { ExamplePlatformAccessory } from './platformAccessory';
+import { YamahaTVSpeaker } from './platformAccessory';
+import { YamahaAVRAPI, YamahaAction } from './yamahaAVRAPI';
+
+type YamahaDeviceInfo = {
+  uuid: string
+  displayName: string,
+  isZoneB: boolean,
+}
 
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
+export class YamahaRXV585Platform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
-
+  private readonly receiverIP: string;
+  private readonly zoneBConfiguredName: string;
+  private readonly mainDisplayName: string;
+  private readonly zoneBDisplayName: string;
+  
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
+  public readonly yamahaAVRAPI: YamahaAVRAPI;
 
-  constructor(
-    public readonly log: Logger,
-    public readonly config: PlatformConfig,
-    public readonly api: API,
-  ) {
+  constructor(public readonly log: Logger, public readonly config: PlatformConfig, public readonly api: API) {
     this.log.debug('Finished initializing platform:', this.config.name);
 
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
-    // to start discovery of new accessories.
-    this.api.on('didFinishLaunching', () => {
-      log.debug('Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
-      this.discoverDevices();
-    });
+    // Get the receiver's IP  and Zone B name as the user configured.
+    this.receiverIP = config['receiverIP'] as string;
+    this.zoneBConfiguredName = config['zoneBConfiguredReceiverName'] as string;
+    this.mainDisplayName = config['mainDisplayName'] as string;
+    this.zoneBDisplayName = config['zoneBDisplayName'] as string;
+    this.yamahaAVRAPI = new YamahaAVRAPI(this.receiverIP, this.log, this.zoneBConfiguredName);
   }
 
   /**
@@ -50,67 +55,66 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
+    // Send a basic power response, to see if we get a response which will indicate we discovered the receiver.
+    this.yamahaAVRAPI.postReceiverGetAction(YamahaAction.POWER).then(data => {
+      if (data?.Power_Control?.Power) {
+        // We found the receiver. Let's register it as two devices: main and zone b.
+        // generate a unique id for the accessory this should be generated from
+        // something globally unique, but constant, for example, the device serial
+        // number or MAC address.
+        const mainUuid = this.api.hap.uuid.generate(this.receiverIP);
+        const zonebUuid = this.api.hap.uuid.generate(this.receiverIP + this.zoneBConfiguredName);
 
-    // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
-    // or a user-defined array in the platform config.
-    const exampleDevices = [
-      {
-        exampleUniqueId: 'ABCD',
-        exampleDisplayName: 'Bedroom',
-      },
-      {
-        exampleUniqueId: 'EFGH',
-        exampleDisplayName: 'Kitchen',
-      },
-    ];
+        const devices: YamahaDeviceInfo[] = [
+          {uuid: mainUuid, displayName: this.mainDisplayName, isZoneB: false}, // The main zone device.
+          {uuid: zonebUuid, displayName: this.zoneBDisplayName, isZoneB: true}, // The zone B device.
+        ];
+        
+        // loop over the discovered devices and register each one if it has not already been registered
+        for (const device of devices) {
+          // see if an accessory with the same uuid has already been registered and restored from
+          // the cached devices we stored in the `configureAccessory` method above
+          const existingAccessory = this.accessories.find(accessory => accessory.UUID === device.uuid);
 
-    // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
+          if (existingAccessory) {
+            // the accessory already exists
+            this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.exampleUniqueId);
+            // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+            // existingAccessory.context.device = device;
+            // this.api.updatePlatformAccessories([existingAccessory]);
 
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+            // create the accessory handler for the restored accessory
+            // this is imported from `platformAccessory.ts`
+            new YamahaTVSpeaker(this, existingAccessory, device.isZoneB);
 
-      if (existingAccessory) {
-        // the accessory already exists
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+          } else {
+            // the accessory does not yet exist, so we need to create it
+            this.log.info('Adding new accessory:', device.displayName);
 
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
+            // create a new accessory
+            const accessory = new this.api.platformAccessory(device.displayName, device.uuid);
 
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, existingAccessory);
+            // store a copy of the device object in the `accessory.context`
+            // the `context` property can be used to store any data about the accessory you may need
+            accessory.context.device = device;
+
+            // create the accessory handler for the newly create accessory
+            // this is imported from `platformAccessory.ts`
+            new YamahaTVSpeaker(this, accessory, device.isZoneB);
+
+            // link the accessory to your platform
+            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          }
+
+          // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+          // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        }
 
       } else {
-        // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.exampleDisplayName);
-
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.exampleDisplayName, uuid);
-
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device;
-
-        // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, accessory);
-
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        // No receiver found. Log an error and finish.
+        this.log.error('Couldn\'t find receiver. Please check the receiverIP is configured correctly.');
       }
-
-      // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-      // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-    }
-
+    });
   }
 }

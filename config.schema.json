@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "YamahaRXV585Receiver",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -9,7 +9,28 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "YamahaRXV585Receiver"
+      },
+      "receiverIP": {
+        "title": "The Yamaha RX-V585 receiver's local network ip address.",
+        "type": "string",
+        "format": "ipv4",
+        "required": true
+      },
+      "zoneBConfiguredReceiverName": {
+        "title": "The name of Zone B as configured in your receiver. Defaults to ZONE_B.",
+        "type": "string",
+        "default": "ZONE_B"
+      },
+      "mainDisplayName": {
+        "title": "The name to set to the main zone. Defaults to Main.",
+        "type": "string",
+        "default": "Main"
+      },
+      "zoneBDisplayName": {
+        "title": "The name to set to zone B. Defaults to Zone B.",
+        "type": "string",
+        "default": "Zone B"
       }
     }
   }

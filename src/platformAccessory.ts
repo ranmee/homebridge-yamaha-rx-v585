@@ -1,14 +1,17 @@
 import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
 
-import { ExampleHomebridgePlatform } from './platform';
+import { YamahaRXV585Platform } from './platform';
 
 /**
- * Platform Accessory
- * An instance of this class is created for each accessory your platform registers
- * Each accessory may expose multiple services of different service types.
+ * Platform Accessory:
+ * A Yamaha RX-V585 TV Speaker.
  */
-export class ExamplePlatformAccessory {
+export class YamahaTVSpeaker {
   private service: Service;
+  
+  private readonly platform: YamahaRXV585Platform;
+  private readonly accessory: PlatformAccessory;
+  private readonly isZoneB: boolean;
 
   /**
    * These are just used to create a working example
@@ -19,10 +22,10 @@ export class ExamplePlatformAccessory {
     Brightness: 100,
   }
 
-  constructor(
-    private readonly platform: ExampleHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
-  ) {
+  constructor(platform, accessory, isZoneB) {
+    this.platform = platform;
+    this.accessory = accessory;
+    this.isZoneB = isZoneB;
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!

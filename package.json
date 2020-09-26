@@ -1,16 +1,15 @@
 {
-  "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "Homebridge Yamaha RX-V585 Plugin",
+  "name": "homebridge-yamaha-rx-v585",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "description": "A homebridge add-on for Yamaha RX-V585 AV Receiver, with control over the internal zone B.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/ranmee/homebridge-yamaha-rx-v585.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/ranmee/homebridge-yamaha-rx-v585/issues"
   },
   "engines": {
     "node": ">=10.17.0",
