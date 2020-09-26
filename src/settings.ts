@@ -6,4 +6,4 @@ export const PLATFORM_NAME = 'YamahaRXV585Receiver';
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = 'homebridge-yamaha-rx-v585';
+export const PLUGIN_NAME = 'homebridge-yamaha-rxv';

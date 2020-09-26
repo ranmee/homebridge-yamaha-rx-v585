@@ -1,4 +1,4 @@
-import { Service, PlatformAccessory, Characteristic } from 'homebridge';
+import { Service, PlatformAccessory } from 'homebridge';
 import { YamahaRXV585Platform } from './platform';
 import { YamahaAction, YamahaActionValue } from './yamahaAVRAPI';
 
