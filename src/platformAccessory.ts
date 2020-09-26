@@ -105,8 +105,8 @@ export class YamahaTVSpeaker {
   handleVolumeGet(callback) {
     this.platform.log.debug('Triggered GET Volume');
 
-    this.platform.yamahaAVRAPI.postReceiverGetAction(YamahaAction.VOLUME_GET, this.isZoneB).then((answer: string) => {
-      const currentVolume = parseInt(answer);
+    this.platform.yamahaAVRAPI.postReceiverGetAction(YamahaAction.VOLUME_GET, this.isZoneB).then((answer: any) => {
+      const currentVolume = parseInt(answer.Val);
 
       // To calculate a percentage (0 - 100) of volume we do ((current - minimum) / (maximum - minimum)).
       let volume = ((currentVolume - this.platform.minVolume) / (this.platform.maxVolume - this.platform.minVolume)) * 100;

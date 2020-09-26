@@ -16,7 +16,7 @@ export enum YamahaAction {
 const YamahaActionStructures = {
   POWER: ['Power_Control', 'Power'], // On or Standby
   VOLUME_SET_UP_DOWN: ['Volume', zoneIdentifier, 'Val.Exp.Unit'], // Up or Down
-  VOLUME_SET_VALUE: ['Volume', zoneIdentifier, 'Val.Exp=1.Unit=dB'], // Up or Down
+  VOLUME_SET_VALUE: ['Volume', zoneIdentifier, 'Lvl', 'Val.Exp=1.Unit=dB'], // Number value
   VOLUME_GET: ['Volume', zoneIdentifier, 'Lvl'], // GetParam
   MUTE: ['Volume', zoneIdentifier, 'Mute'], // On or Off
 };
@@ -46,14 +46,13 @@ export class YamahaAVRAPI {
   private readonly zoneBName: string;
   
   constructor(receiverIP: string, logger: Logger, zoneBName?: string) {
-    this.baseUrl = 'http://' + receiverIP + '/YamahaRemoteControl/ctrl/';
-    this.zoneBName = zoneBName || 'ZONE_B';
+    this.baseUrl = 'http://' + receiverIP + '/YamahaRemoteControl/ctrl';
+    this.zoneBName = zoneBName || 'Zone_B';
 
     this.logger = logger;
 
     this.api = axios.create({
       baseURL: this.baseUrl,
-      withCredentials: true,
     });
   }
 
@@ -75,7 +74,8 @@ export class YamahaAVRAPI {
 
     // Now we go over node names to add according to the given action and known action structure.
     let lastNode = data.Main_Zone;
-    for (const nodeString of YamahaActionStructures[action]) {
+    for (let i = 0; i < YamahaActionStructures[action].length; i++) {
+      const nodeString = YamahaActionStructures[action][i];
       let nodeStringValue = nodeString;
       
       // Check if this node is a zone space-saver.
@@ -98,7 +98,7 @@ export class YamahaAVRAPI {
       const nodeNames = nodeStringValue.split('.');
 
       for (const nodeName of nodeNames) {
-        if (nodeNames.includes('=')) {
+        if (nodeName.includes('=')) {
           // The node name also contains a value to set. Set the node to the value.
           const nodeNameParts = nodeName.split('=');
           lastNode[nodeNameParts[0]] = nodeNameParts[1];
@@ -108,17 +108,29 @@ export class YamahaAVRAPI {
         }
 
       }
+      if (i + 1 === YamahaActionStructures[action].length) {
+        // We're done. Set the action value to the last node.
+        lastNode[nodeNames[0]] = actionValue;
+      }
+
       // The first node name is the one we will keep adding into.
       lastNode = lastNode[nodeNames[0]];
     }
-
-    // Now add the action value to the last node we visited.
-    lastNode = actionValue;
     
     // Transform the created json to XML.
-    const xmlData = js2xmlParse('YAMAHA_AV', data);
+    const xmlOptions = {
+      declaration: {
+        include: true,
+        encoding: 'utf-8',
+      },
+      format: {
+        doubleQuotes: true,
+        pretty: false,
+      },
+    };
+    const xmlData = js2xmlParse('YAMAHA_AV', data, xmlOptions);
 
-    this.logger.info(`Sending: ${xmlData}`);
+    this.logger.debug(`Sending: ${xmlData}`);
 
     return xmlData;
   }
@@ -169,18 +181,32 @@ export class YamahaAVRAPI {
     const data = this.buildRequestData(YamahaCommand.SET, action, actionValue, isZoneB);
 
     this.logger.info(`Posting receiver set action. Action ${action}, value: ${actionValue}, isZoneB: ${isZoneB}`);
-    const response = await this.api.post('', data, this.getRequestConfig());
+    try {
+      const response = await this.api.post('', data, this.getRequestConfig());
+      return await this.parseXmlResponse(response.data, action, isZoneB);
 
-    return await this.parseXmlResponse(response.data, action, isZoneB);
+    } catch (e) {
+      this.logger.error('Failed sending request to Yamaha Receiver.');
+      this.logger.error(e);
+      return null;
+    }
   }
 
   public async postReceiverGetAction(action: YamahaAction, isZoneB = false) {
     const data = this.buildRequestData(YamahaCommand.GET, action, YamahaActionValue.GET, isZoneB);
 
     this.logger.info(`Getting receiver get action. Action ${action}, isZoneB: ${isZoneB}`);
-    const response = await this.api.post('', data, this.getRequestConfig());
-    this.logger.info(`Got receiver get data: ${response.data}`);
+    try {
+      const response = await this.api.post('', data, this.getRequestConfig());
+      this.logger.debug(`Got receiver get data: ${response.data}`);
+      const value = await this.parseXmlResponse(response.data, action, isZoneB);
+      this.logger.debug(`Got result for get action. Action ${action}, isZoneB: ${isZoneB}, value: ${JSON.stringify(value)}`);
+      return value;
 
-    return await this.parseXmlResponse(response.data, action, isZoneB);
+    } catch (e) {
+      this.logger.error('Failed sending request to Yamaha Receiver.');
+      this.logger.error(e);
+      return null;
+    }
   }
 }

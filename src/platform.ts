@@ -2,7 +2,7 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { YamahaTVSpeaker } from './platformAccessory';
-import { YamahaAVRAPI, YamahaAction } from './yamahaAVRAPI';
+import { YamahaAVRAPI, YamahaAction, YamahaActionValue } from './yamahaAVRAPI';
 
 type YamahaDeviceInfo = {
   uuid: string
@@ -40,6 +40,9 @@ export class YamahaRXV585Platform implements DynamicPlatformPlugin {
     this.minVolume = config['minVolume'] ? parseInt(config['minVolume'] as string) * 10 : -700;
     this.maxVolume = config['maxVolume'] ? parseInt(config['maxVolume'] as string) * 10 : 100;
     this.yamahaAVRAPI = new YamahaAVRAPI(this.receiverIP, this.log, this.zoneBConfiguredName);
+
+    // run the method to discover / register your devices as accessories
+    this.discoverDevices();
   }
 
   /**
@@ -61,7 +64,7 @@ export class YamahaRXV585Platform implements DynamicPlatformPlugin {
   discoverDevices() {
     // Send a basic power response, to see if we get a response which will indicate we discovered the receiver.
     this.yamahaAVRAPI.postReceiverGetAction(YamahaAction.POWER).then(data => {
-      if (data?.Power_Control?.Power) {
+      if (data === YamahaActionValue.ON || data === YamahaActionValue.STANDBY) {
         // We found the receiver. Let's register it as two devices: main and zone b.
         // generate a unique id for the accessory this should be generated from
         // something globally unique, but constant, for example, the device serial

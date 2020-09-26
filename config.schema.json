@@ -18,9 +18,9 @@
         "required": true
       },
       "zoneBConfiguredReceiverName": {
-        "title": "The name of Zone B as configured in your receiver. Defaults to ZONE_B.",
+        "title": "The name of Zone B as configured in your receiver. Defaults to Zone_B.",
         "type": "string",
-        "default": "ZONE_B"
+        "default": "Zone_B"
       },
       "mainDisplayName": {
         "title": "The name to set to the main zone. Defaults to Main.",
