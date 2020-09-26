@@ -1,7 +1,7 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { YamahaTVSpeaker } from './platformAccessory';
+import { YamahaFan } from './platformAccessory';
 import { YamahaAVRAPI, YamahaAction, YamahaActionValue } from './yamahaAVRAPI';
 
 type YamahaDeviceInfo = {
@@ -93,7 +93,7 @@ export class YamahaRXV585Platform implements DynamicPlatformPlugin {
 
             // create the accessory handler for the restored accessory
             // this is imported from `platformAccessory.ts`
-            new YamahaTVSpeaker(this, existingAccessory, device.isZoneB);
+            new YamahaFan(this, existingAccessory, device.isZoneB);
 
           } else {
             // the accessory does not yet exist, so we need to create it
@@ -108,7 +108,7 @@ export class YamahaRXV585Platform implements DynamicPlatformPlugin {
 
             // create the accessory handler for the newly create accessory
             // this is imported from `platformAccessory.ts`
-            new YamahaTVSpeaker(this, accessory, device.isZoneB);
+            new YamahaFan(this, accessory, device.isZoneB);
 
             // link the accessory to your platform
             this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

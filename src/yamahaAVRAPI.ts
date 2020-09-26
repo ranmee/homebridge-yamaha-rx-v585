@@ -90,7 +90,7 @@ export class YamahaAVRAPI {
       }
 
       // Power is a special case with zones...
-      if (isZoneB && nodeString === 'POWER') {
+      if (isZoneB && nodeString === 'Power') {
         nodeStringValue = this.zoneBName + '_' + nodeString;
       }
 
@@ -135,7 +135,7 @@ export class YamahaAVRAPI {
     return xmlData;
   }
 
-  private retrieveResponseData(innerData: any, action: YamahaAction, isZoneB = false) {
+  private retrieveResponseData(innerData, action: YamahaAction, isZoneB = false) {
     // Now we go over node names to find according to the given action and known action structure.
     let lastNode = innerData;
     for (const nodeString of YamahaActionStructures[action]) {
