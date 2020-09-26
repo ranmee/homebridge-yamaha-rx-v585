@@ -31,6 +31,20 @@
         "title": "The name to set to zone B. Defaults to Zone B.",
         "type": "string",
         "default": "Zone B"
+      },
+      "minVolume": {
+        "title": "The minimum volume of the receiver. For 0-100% calculations.",
+        "type": "integer",
+        "default": -70,
+        "minimum": -81,
+        "maximum": 0
+      },
+      "maxVolume": {
+        "title": "The maximum volume of the receiver. For 0-100% calculations.",
+        "type": "integer",
+        "default": 10,
+        "minimum": -50,
+        "maximum": 15
       }
     }
   }

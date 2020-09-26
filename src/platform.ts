@@ -22,6 +22,8 @@ export class YamahaRXV585Platform implements DynamicPlatformPlugin {
   private readonly zoneBConfiguredName: string;
   private readonly mainDisplayName: string;
   private readonly zoneBDisplayName: string;
+  public readonly minVolume: number;
+  public readonly maxVolume: number;
   
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
@@ -35,6 +37,8 @@ export class YamahaRXV585Platform implements DynamicPlatformPlugin {
     this.zoneBConfiguredName = config['zoneBConfiguredReceiverName'] as string;
     this.mainDisplayName = config['mainDisplayName'] as string;
     this.zoneBDisplayName = config['zoneBDisplayName'] as string;
+    this.minVolume = config['minVolume'] ? parseInt(config['minVolume'] as string) * 10 : -700;
+    this.maxVolume = config['maxVolume'] ? parseInt(config['maxVolume'] as string) * 10 : 100;
     this.yamahaAVRAPI = new YamahaAVRAPI(this.receiverIP, this.log, this.zoneBConfiguredName);
   }
 
