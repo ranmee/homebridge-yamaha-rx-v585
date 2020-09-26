@@ -27,7 +27,7 @@
     "homebridge-plugin"
   ],
   "dependencies": {
-    "axios": "^0.20.0",
+    "axios": "^0.19.2",
     "fast-xml-parser": "^3.17.4",
     "js2xmlparser": "^4.0.1",
     "xml2js": "^0.4.23"
