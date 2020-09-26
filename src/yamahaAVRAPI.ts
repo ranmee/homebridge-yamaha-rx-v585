@@ -116,7 +116,8 @@ export class YamahaAVRAPI {
   private async parseXmlResponse(xml: string) {
     const parser = new Xml2JsParser({ ignoreAttrs: true, explicitArray: false });
     return await parser.parseStringPromise(xml).then((result) => {
-      return JSON.stringify(result);
+      // Return the part in the json that we care about.
+      return result.YAMAHA_AV.Main_Zone;
     });
   }
 
