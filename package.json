@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Yamaha RX-V585 Plugin",
   "name": "homebridge-yamaha-rxv",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A homebridge add-on for Yamaha RX-V585 AV Receiver, with control over the internal zone B.",
   "license": "Apache-2.0",
   "repository": {
