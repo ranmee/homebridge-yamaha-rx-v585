@@ -5,10 +5,11 @@ Install this plugin to control your Yamaha RX-V585 receiver through Homebridge.
 The plugin creates 2 fan accessories: one for the main zone and one for Zone B of your receiver.
 This way you can control both zones and their volume (which is the fan speed).
 
-To install:
+### Install:
 
 ```npm install -g homebridge-yamaha-rxv```
 
+### Configure
 
 After the install is finished, open your Homebridge settings and configure the following parameters (you can go to plugins and click on settings to have a form like experience):
 
